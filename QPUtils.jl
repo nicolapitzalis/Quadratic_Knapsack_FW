@@ -1,8 +1,16 @@
 using LinearAlgebra, Random, SparseArrays
 
-export genQf
+struct QP
+    Q::Matrix{Float64}
+    q::Vector{Float64}
+    v::Float64
+    a::Vector{Float64}
+    b::Float64
+    l::Vector{Float64}
+    u::Vector{Float64}
+end
 
-function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99, dom::Real=1, box::Real=1)
+function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99, dom::Real=1, box::Bool=true)
     #=
 
         Parameters: 
@@ -16,7 +24,7 @@ function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99,
 
         -dom (real, scalar, default: 1): if dom = 1 then the matrix is unchanged, else if dom > 1 then the matrix is scaled up, and if dom < 1 then the matrix is scaled down w.r.t. the diagonal elements. This will lead to a diagonally dominant matrix if dom > 1, and to a diagonally non-dominant matrix if dom < 1
 
-        - box (real, scalar, default: 1): if box > 0 then the problem is feasible, else if box < 0 then the problem is infeasible. This will lead to a feasible problem if box > 0, and to an infeasible problem if box < 0
+        - box (bool, default: true): if box is true then the problem is feasible, else if box is false then the problem is infeasible. This will lead to a feasible problem if box is true, and to an infeasible problem if box is false.
 
         Outputs: 
         - Q: a symmetric matrix of size n x n
@@ -34,6 +42,7 @@ function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99,
 
     Random.seed!(seed)
 
+    
     # --------------------------------------------------------------------------
     # Generate Q
     r = round(Int, rank * n)
@@ -71,6 +80,7 @@ function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99,
     end
     # --------------------------------------------------------------------------
     
+
     # --------------------------------------------------------------------------
     # Generate q if required
     q = nothing
@@ -78,7 +88,7 @@ function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99,
     q = -Q * x
     
     # Randomly modify q if box < 0 and Q is rank-deficient
-    if box < 0 && vals[1] <= 1e-14
+    if box && vals[1] <= 1e-14
         q .*= (4 / 3) .* rand(n) .- 2 / 3
     end
     # --------------------------------------------------------------------------
@@ -93,6 +103,7 @@ function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99,
         v = -Inf
     end
     # --------------------------------------------------------------------------
+
 
     # --------------------------------------------------------------------------
     # Generate a, b, l, u  
@@ -109,5 +120,5 @@ function genQf(n; seed::Integer=0, rank::Real=1.1, conv::Real=1, ecc::Real=0.99,
     u = l + u
     # --------------------------------------------------------------------------
 
-    return Q, q, v, a, b, l, u
+    return QP(Q, q, v, a, b, l, u)
 end

@@ -17,7 +17,7 @@ function x_bar = linear_subproblem(BCQP, c)
     end
     
     % Check if current x_bar satisfies the condition
-    if BCQP.a' * x_bar >= b
+    if BCQP.a' * x_bar >= BCQP.b
         return;
     end
     
@@ -27,7 +27,7 @@ function x_bar = linear_subproblem(BCQP, c)
     % Adjust x_bar based on the permutation
     for p = P'
         x_bar(p) = BCQP.u(p);
-        if a' * x_bar > BCQP.b
+        if BCQP.a' * x_bar > BCQP.b
             x_bar(p) = (BCQP.b - sum(BCQP.a .* x_bar) + BCQP.a(p) * x_bar(p)) / BCQP.a(p);
             return;
         end

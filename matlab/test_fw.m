@@ -22,13 +22,13 @@ for i = 0:tries-1
     % Convert the problem to a standard form for quadprog
     H = Q; % This is the matrix for the quadratic term
     f = q; % This is the vector for the linear term
-    A = -a; % We need to negate the 'a' because quadprog minimizes A*x <= b
+    A = -a'; % We need to negate the 'a' because quadprog minimizes A*x <= b
     B = -b; % Corresponding negated 'b'
     
     % Define bounds
     lb = l; % Lower bounds
     ub = u; % Upper bounds
-    
+
     % Solve the problem using quadprog
     options = optimoptions('quadprog', 'Display', 'off', 'TolFun', 1e-6);
     [x, fval, exitflag] = quadprog(H, f, A, B, [], [], lb, ub, [], options);
@@ -37,7 +37,7 @@ for i = 0:tries-1
     gold_solution_x = x;
 
     % Call the CQKP_FW function (assuming it is defined in MATLAB)
-    [y, x_opt, status] = CQKP_FW(data, 'verbose', false, 'eps', 1e-6, 'MaxIter', 1000);
+    [y, x_opt, status] = FWBCQP(data, 0.1, 1e-6, 1000);
     our_solution_value = y;
     our_solution_x = x_opt;
 

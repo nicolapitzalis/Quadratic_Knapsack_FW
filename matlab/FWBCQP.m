@@ -65,7 +65,7 @@ function [ v , varargout ] =  FWBCQP( BCQP , varargin )
 
 Interactive = false;  % if we pause at every iteration
 
-Verbose = true;      % if we log every iteration
+Verbose = false;      % if we log every iteration
 
 % reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

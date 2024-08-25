@@ -7,7 +7,7 @@ function x_bar = linear_subproblem(BCQP, c)
     n = length(BCQP.a);
     x_bar = zeros(n, 1);
     
-    % Step 1-7: Initialize x_bar based on the sign of c
+    % Initialize x_bar based on the sign of c
     for i = 1:n
         if c(i) >= 0
             x_bar(i) = BCQP.l(i);
@@ -16,15 +16,15 @@ function x_bar = linear_subproblem(BCQP, c)
         end
     end
     
-    % Step 8-10: Check if current x_bar satisfies the condition
-    if BCQP.a' * x_bar >= 0
+    % Check if current x_bar satisfies the condition
+    if BCQP.a' * x_bar >= b
         return;
     end
     
-    % Step 11: Compute the permutation P that orders indices
+    % Compute the permutation P that orders indices
     [~, P] = sort(c ./ BCQP.a);
     
-    % Step 12-18: Adjust x_bar based on the permutation
+    % Adjust x_bar based on the permutation
     for p = P'
         x_bar(p) = BCQP.u(p);
         if a' * x_bar > BCQP.b

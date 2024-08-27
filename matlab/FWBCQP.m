@@ -122,7 +122,33 @@ end
 % initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-x = BCQP.u / 2;  % start from the middle of the box
+% % Step 1: Project l onto the hyperplane H: <a,x> = b
+% PH_l = BCQP.l - ((dot(BCQP.a, BCQP.l) - BCQP.b) / norm(BCQP.a)^2) * BCQP.a;
+
+% % Step 2: Consider the segment [PH(l), u] and compute the midpoint
+% x0 = (PH_l + BCQP.u) / 2;
+
+% % Step 3: Check if x0 is feasible
+% if all(x0 >= BCQP.l) && all(x0 <= BCQP.u) && (dot(BCQP.a, x0) >= BCQP.b)
+%     % x0 is feasible
+%     feasible = true;
+% else
+%     % x0 is not feasible
+%     feasible = false;
+% end
+
+% % Step 4: If x0 is not feasible, consider PH(u) and take the midpoint with u
+% if ~feasible
+%     PH_u = BCQP.u - ((dot(BCQP.a, BCQP.u) - BCQP.b) / norm(BCQP.a)^2) * BCQP.a;
+%     x0 = (PH_u + BCQP.u) / 2;
+    
+%     % Step 5: If still not feasible, set x0 = u
+%     if ~all(x0 >= BCQP.l) || ~all(x0 <= BCQP.u) || (dot(BCQP.a, x0) < BCQP.b)
+%         x0 = BCQP.u;
+%     end
+% end
+x0 = linear_subproblem(BCQP, zeros(size(BCQP.q, 1), 1));
+x = x0;  % start from the middle of the box
 
 bestlb = - inf;  % best lower bound so far (= none, really)
 
@@ -143,11 +169,16 @@ end
 while true
     % compute function value and direction = - gradient - - - - - - - - - -
 
-    v = 0.5 * x' * BCQP.Q * x + BCQP.q' * x;
-    g = BCQP.Q * x + BCQP.q;
+    v = x' * BCQP.Q * x + BCQP.q' * x;
+    g = 2 * BCQP.Q * x + BCQP.q;
 
     % solve min { < g , y > : 0 <= y <= u }
-    y = linear_subproblem(BCQP, g);
+    if t > 0
+      y = linear_subproblem(BCQP, g, x, t);
+    else
+      y = linear_subproblem(BCQP, g);
+    end
+
 %     y = zeros( n , 1 );
 %     ind = g < 0;
 %     y( ind ) = BCQP.u( ind );
@@ -182,9 +213,9 @@ while true
 
     % in the stabilized case, restrict y in the box - - - - - - - - - - - -
 
-    if t > 0
-       y = max( x - t * BCQP.u , min( x + t * BCQP.u , y ) );
-    end
+   %  if t > 0
+   %     y = max( x - t * BCQP.u , min( x + t * BCQP.u , y ) );
+   %  end
     
     % compute step size - - - - - - - - - - - - - - - - - - - - - - - - - -
     % we are taking direction d = y - x and y is feasible, hence the
@@ -204,7 +235,7 @@ while true
        alpha = 1;    % just take the maximum possible stepsize
     else
        % optimal unbounded stepsize restricted to max feasible step
-       alpha = min( [ ( - g' * d ) / den , 1 ] );
+       alpha = min( [ ( - g' * d ) / (2 * den) , 1 ] );
     end
     
     % compute new point - - - - - - - - - - - - - - - - - - - - - - - - - -

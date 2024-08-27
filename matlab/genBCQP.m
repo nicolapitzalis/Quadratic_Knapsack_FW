@@ -204,6 +204,7 @@ if D( 1 , 1 ) > 1e-14
    Q = V * diag( l ) * V';
 end
 
+Q = 0.5 * ( Q + Q' );  % make it symmetric
 BCQP.Q = Q;
 
 % generate q- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -8,7 +8,7 @@ for i = 1:100
     [v, x, s] = FWBCQP ( BCQP );
     
     % Compute the norm of the difference between the two solutions
-    diff(i) = FVAL - v;
+    diff(i) = abs(FVAL - v);
 
     % Check if the difference exceeds the threshold (1e-6)
     if diff(i) > 1e-6

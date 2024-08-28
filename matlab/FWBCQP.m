@@ -1,71 +1,6 @@
 function [ v , varargout ] =  FWBCQP( BCQP , varargin )
 
-%function [ v , x , status ] = FWBCQP( BCQP , t , eps , MaxIter )
-%
-% Apply the (possibly, stabilized) Franke-Wolfe algorithm with exact line
-% search to the convex Box-Constrained Quadratic program
-%
-%  (P) min { (1/2) x^T * Q * x + q * x : 0 <= x <= u }
-%
-% encoded in the structure BCQP.
-%
-% Input:
-%
-% - BCQP, the structure encoding the BCQP to be solved within its fields:
-%
-%   = BCQP.Q: n \times n symmetric positive semidefinite real matrix
-%
-%   = BCQP.q: n \times 1 real vector
-%
-%   = BCQP.u: n \times 1 real vector > 0
-%
-% - t (real scalar scalar, optional, default value 0): if the stablized
-%   version of the approach is used, then the new point is chosen in the
-%   box of relative sixe t around the current point, i.e., the component
-%   x[ i ] is allowed to change by not more than plus or minus t * u[ i ].
-%   if t = 0, then the non-stabilized version of the algorithm is used.
-%
-% - eps (real scalar, optional, default value 1e-6): the accuracy in the 
-%   stopping criterion: the algorithm is stopped when the relative gap
-%   between the value of the best primal solution (the current one) and the
-%   value of the best lower bound obtained so far is less than or equal to
-%   eps
-%
-% - MaxIter (integer scalar, optional, default value 1000): the maximum
-%   number of iterations
-%
-% Output:
-%
-% - v (real scalar): the best function value found so far (possibly the
-%   optimal one)
-%
-% - x ([ n x 1 ] real column vector, optional): the best solution found so
-%   far (possibly the optimal one)
-%
-% - status (string, optional): a string describing the status of the
-%   algorithm at termination, with the following possible values:
-%
-%   = 'optimal': the algorithm terminated having proven that x is a(n
-%     approximately) optimal solution, i.e., the norm of the gradient at x
-%     is less than the required threshold
-%
-%   = 'stopped': the algorithm terminated having exhausted the maximum
-%     number of iterations: x is the bast solution found so far, but not
-%     necessarily the optimal one
-%
-%
-%{
- =======================================
- Author: Antonio Frangioni
- Date: 13-12-22
- Version 1.21
- Copyright Antonio Frangioni
- =======================================
-%}
-
-Interactive = false;  % if we pause at every iteration
-
-Verbose = false;      % if we log every iteration
+Verbose = true;      % if we log every iteration
 
 % reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -120,34 +55,8 @@ else
 end
 
 % initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-% % Step 1: Project l onto the hyperplane H: <a,x> = b
-% PH_l = BCQP.l - ((dot(BCQP.a, BCQP.l) - BCQP.b) / norm(BCQP.a)^2) * BCQP.a;
-
-% % Step 2: Consider the segment [PH(l), u] and compute the midpoint
-% x0 = (PH_l + BCQP.u) / 2;
-
-% % Step 3: Check if x0 is feasible
-% if all(x0 >= BCQP.l) && all(x0 <= BCQP.u) && (dot(BCQP.a, x0) >= BCQP.b)
-%     % x0 is feasible
-%     feasible = true;
-% else
-%     % x0 is not feasible
-%     feasible = false;
-% end
-
-% % Step 4: If x0 is not feasible, consider PH(u) and take the midpoint with u
-% if ~feasible
-%     PH_u = BCQP.u - ((dot(BCQP.a, BCQP.u) - BCQP.b) / norm(BCQP.a)^2) * BCQP.a;
-%     x0 = (PH_u + BCQP.u) / 2;
-    
-%     % Step 5: If still not feasible, set x0 = u
-%     if ~all(x0 >= BCQP.l) || ~all(x0 <= BCQP.u) || (dot(BCQP.a, x0) < BCQP.b)
-%         x0 = BCQP.u;
-%     end
-% end
-x0 = linear_subproblem(BCQP, zeros(size(BCQP.q, 1), 1));
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+x0 = linear_subproblem(BCQP, zeros(n, 1));
 x = x0;  % start from the middle of the box
 
 bestlb = - inf;  % best lower bound so far (= none, really)
@@ -162,92 +71,50 @@ i = 1;
 % main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-if ~ Interactive
-   tic;
-end
-
 while true
-    % compute function value and direction = - gradient - - - - - - - - - -
+   v = x' * BCQP.Q * x + BCQP.q' * x;
+   g = 2 * BCQP.Q * x + BCQP.q;
 
-    v = x' * BCQP.Q * x + BCQP.q' * x;
-    g = 2 * BCQP.Q * x + BCQP.q;
-
-    % solve min { < g , y > : 0 <= y <= u }
-    if t > 0
-      y = linear_subproblem(BCQP, g, x, t);
-    else
+   if t > 0
+%       y = linear_subproblem(BCQP, g, x, t);
+        y = linprog(g, -BCQP.a', -BCQP.b, [], [], max(BCQP.l, x - t .* BCQP.u), min(BCQP.u, x + t .* BCQP.u));
+   else
       y = linear_subproblem(BCQP, g);
-    end
+   end
 
-%     y = zeros( n , 1 );
-%     ind = g < 0;
-%     y( ind ) = BCQP.u( ind );
-    
-    % compute the lower bound: remember that the first-order approximation
-    % is f( x ) + g ( y - x )
-    lb = v + g' * ( y - x );
-    if lb > bestlb
-       bestlb = lb;
-    end
+   [bestlb, gap] = get_gap(v, g, y, x, bestlb);
 
-    % compute the relative gap
-    gap = ( v - bestlb ) / max( [ abs( v ) 1 ] );
+   if Verbose
+      fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\n' , i , v , bestlb , gap );
+   end
 
-    % output statistics - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  
-    if Verbose
-       fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\n' , i , v , bestlb , gap );
-    end
+   if gap <= eps
+      status = 'optimal';
+      break;
+   end
    
-    % stopping criteria - - - - - - - - - - - - - - - - - - - - - - - - - -
+   if i > MaxIter
+      status = 'stopped';
+      break;
+   end
 
-    if gap <= eps      % look, ma! the *true* stopping criterion, for once!
-       status = 'optimal';
-       break;
-    end
-    
-    if i > MaxIter
-       status = 'stopped';
-       break;
-    end
+   % in the stabilized case, restrict y in the box - - - - - - - - - - - -
 
-    % in the stabilized case, restrict y in the box - - - - - - - - - - - -
+%  if t > 0
+%     y = max( x - t * BCQP.u , min( x + t * BCQP.u , y ) );
+%  end
+   d = y - x;
+   alpha = line_search(BCQP, d, g, 1);
+   x = x + alpha * d;
+   i = i + 1;
 
-   %  if t > 0
-   %     y = max( x - t * BCQP.u , min( x + t * BCQP.u , y ) );
-   %  end
-    
-    % compute step size - - - - - - - - - - - - - - - - - - - - - - - - - -
-    % we are taking direction d = y - x and y is feasible, hence the
-    % maximum stepsize is 1
-
-    d = y - x;
-
-    % compute optimal unbounded stepsize:
-    % min (1/2) ( x + a d )' * Q * ( x + a d ) + q' * ( x + a d ) =
-    %     (1/2) a^2 ( d' * Q * d ) + a d' * ( Q * x + q ) [ + const ]
-    %
-    % ==> a = - d' * ( Q * x + q ) / d' * Q * d
-    %
-    den = d' * BCQP.Q * d;
-    
-    if den <= 1e-16  % d' * Q * d = 0  ==>  f is linear along d
-       alpha = 1;    % just take the maximum possible stepsize
-    else
-       % optimal unbounded stepsize restricted to max feasible step
-       alpha = min( [ ( - g' * d ) / (2 * den) , 1 ] );
-    end
-    
-    % compute new point - - - - - - - - - - - - - - - - - - - - - - - - - -
-    
-    x = x + alpha * d;
+%    if any(x < BCQP.l) || any(x > BCQP.u)
+%       error('x is outside the original box constraints.');
+%    end
   
-    % iterate - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    i = i + 1;
-
-    if Interactive
-       pause;
-    end
+%    if BCQP.a' * x < BCQP.b
+%       error('Linear inequality constraint violated.');
+%    end
 end
 
 % end of main loop- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -255,9 +122,6 @@ end
 
 fprintf( 'stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n' , ...
          i , status , v , gap );
-if ~ Interactive
-   toc
-end
 
 if nargout > 1
    varargout{ 1 } = x;

@@ -1,4 +1,4 @@
-function [ val , varargout ] =  pair_wise( BCQP , varargin )
+function [ val , varargout ] =  fw_pairwise( BCQP , varargin )
 
 % reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

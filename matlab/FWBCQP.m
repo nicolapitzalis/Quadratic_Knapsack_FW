@@ -56,7 +56,7 @@ end
 
 % initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-x0 = linear_subproblem(BCQP, zeros(n, 1));
+x0 = LP(BCQP, zeros(n, 1));
 x = x0;  % start from the middle of the box
 
 bestlb = - inf;  % best lower bound so far (= none, really)
@@ -75,12 +75,9 @@ while true
    v = x' * BCQP.Q * x + BCQP.q' * x;
    g = 2 * BCQP.Q * x + BCQP.q;
 
-   if t > 0
-%       y = linear_subproblem(BCQP, g, x, t);
-        y = linprog(g, -BCQP.a', -BCQP.b, [], [], max(BCQP.l, x - t .* BCQP.u), min(BCQP.u, x + t .* BCQP.u));
-   else
-      y = linear_subproblem(BCQP, g);
-   end
+
+   y = LP(BCQP, g);
+
 
    [bestlb, gap] = get_gap(v, g, y, x, bestlb);
 
@@ -98,23 +95,11 @@ while true
       break;
    end
 
-   % in the stabilized case, restrict y in the box - - - - - - - - - - - -
-
-%  if t > 0
-%     y = max( x - t * BCQP.u , min( x + t * BCQP.u , y ) );
-%  end
    d = y - x;
    alpha = line_search(BCQP, d, g, 1);
    x = x + alpha * d;
    i = i + 1;
 
-%    if any(x < BCQP.l) || any(x > BCQP.u)
-%       error('x is outside the original box constraints.');
-%    end
-  
-%    if BCQP.a' * x < BCQP.b
-%       error('Linear inequality constraint violated.');
-%    end
 end
 
 % end of main loop- - - - - - - - - - - - - - - - - - - - - - - - - - - - -

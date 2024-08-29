@@ -1,4 +1,4 @@
-function [ val , varargout ] =  step_away( BCQP , varargin )
+function [ val , varargout ] =  fw_step_away( BCQP , varargin )
 
 % reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

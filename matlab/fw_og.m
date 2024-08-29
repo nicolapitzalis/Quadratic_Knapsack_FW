@@ -1,4 +1,4 @@
-function [ v , varargout ] =  FWBCQP( BCQP , varargin )
+function [ v , varargout ] =  fw_og( BCQP , varargin )
 
 % reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

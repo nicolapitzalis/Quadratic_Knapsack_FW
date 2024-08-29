@@ -6,6 +6,8 @@ for i = 1:100
     
     [X,FVAL,EXITFLAG,OUTPUT] = quadprog(2 * BCQP.Q, BCQP.q, -BCQP.a', -BCQP.b, [], [], BCQP.l, BCQP.u);
     [v, x, s] = FWBCQP ( BCQP );
+    % [v, x, s] = step_away ( BCQP );
+    % [v, x, s] = pair_wise ( BCQP );
     
     % Compute the norm of the difference between the two solutions
     diff(i) = abs(FVAL - v);

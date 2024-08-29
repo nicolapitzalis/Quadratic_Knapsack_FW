@@ -1,7 +1,5 @@
 function [ v , varargout ] =  FWBCQP( BCQP , varargin )
 
-Verbose = true;      % if we log every iteration
-
 % reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -54,6 +52,15 @@ else
    MaxIter = 1000;
 end
 
+if length( varargin ) > 3
+   verbose = varargin{ 4 };
+   if ~ islogical( verbose ) || ~ isscalar( verbose )
+      error( 'Verbose is not a logical scalar' );
+   end
+else
+   verbose = false;
+end
+
 % initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 x0 = LP(BCQP, zeros(n, 1));
@@ -62,7 +69,7 @@ x = x0;  % start from the middle of the box
 bestlb = - inf;  % best lower bound so far (= none, really)
 
 fprintf( 'Frank-Wolfe method\n');
-if Verbose
+if verbose
    fprintf( 'iter\tf(x)\t\tlb\t\tgap\n\n' );
 end
 
@@ -81,7 +88,7 @@ while true
 
    [bestlb, gap] = get_gap(v, g, y, x, bestlb);
 
-   if Verbose
+   if verbose
       fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\n' , i , v , bestlb , gap );
    end
 

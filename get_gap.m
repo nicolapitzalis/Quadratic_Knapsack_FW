@@ -1,7 +1,7 @@
 function [bestlb, gap] = get_gap(v, g, y, x, bestlb)
     
 % compute new lower bound
-lb = v + g' * ( y - x ) - 1e-10;
+lb = v + g' * ( y - x );
 
 % update if best
 if lb > bestlb

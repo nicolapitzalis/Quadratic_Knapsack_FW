@@ -124,7 +124,7 @@ if length( varargin ) > 4
       error( 'umin must be > 0' );
    end
 else
-   umin = 8;
+   umin = 0;
 end
 
 if length( varargin ) > 5
@@ -137,7 +137,7 @@ if length( varargin ) > 5
       error( 'umax must be > umin' );
    end
 else
-   umax = 12;
+   umax = 1;
 end
 
 if length( varargin ) > 6
@@ -163,7 +163,7 @@ if length( varargin ) > 7
       error( 'lmax must be > umin' );
    end
 else
-   lmax = 4;
+   lmax = 1;
 end
 
 % generate u- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -244,6 +244,8 @@ BCQP.q = - BCQP.Q * z;
 BCQP.a = rand(n, 1);
 x0 = BCQP.l + (BCQP.u - BCQP.l) .* rand(size(BCQP.l));
 BCQP.b = BCQP.a' * x0;
+% r = rand();
+% BCQP.b = r * (BCQP.a'*BCQP.l) + (1-r) * (BCQP.a'*BCQP.u);
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 end

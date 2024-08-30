@@ -1,27 +1,55 @@
-diff = zeros(100, 1);
-differing_solutions_count = 0;
+function test_quad(alg, n, act, rank, ecc, trials)
 
-for i = 1:100
-    BCQP = genBCQP(100, 0.6, 1.1, 0.99, i);
-    
-    [X,FVAL,EXITFLAG,OUTPUT] = quadprog(2 * BCQP.Q, BCQP.q, -BCQP.a', -BCQP.b, [], [], BCQP.l, BCQP.u);
-    [v, x, s] = fw_og ( BCQP );
-    % [v, x, s] = fw_step_away ( BCQP );
-    % [v, x, s] = fw_pairwise ( BCQP );
-    
-    % Compute the norm of the difference between the two solutions
-    diff(i) = abs(FVAL - v);
 
-    % Check if the difference exceeds the threshold (1e-6)
-    if diff(i) > 1e-6
-        disp(FVAL);
-        disp(v);
-        differing_solutions_count = differing_solutions_count + 1;
-    end
+logs_gaps = [];
+times = [];
+iterations = [];
+
+epsilon = 1e-15;
+MaxIter = 1000;
+
+if ~ismember(alg, {'quadprog', 'fw_og', 'fw_away_step', 'fw_pairwise'})
+    error('alg is not in ["fw_og", "fw_away_step", "fw_pairwise"]');
 end
 
-% Display the results
-disp('Average difference norm over 100 experiments:');
-disp(mean(diff));
-disp('Number of experiments with differing solutions (≥1e-6):');
-disp(differing_solutions_count);
+for i = 1:trials
+    BCQP = genBCQP(n, act, rank, ecc, i);
+    
+    if strcmp(alg, 'quadprog')
+        a = 1; % TODO
+    elseif strcmp(alg, 'fw_og')
+        [v, log, ~] = fw_og(BCQP, epsilon, MaxIter, false);
+    elseif strcmp(alg, 'fw_away_step')
+        [v, log, ~] = fw_away_step(BCQP, epsilon, MaxIter, false);
+    elseif strcmp(alg, 'fw_pairwise')
+        [v, log, ~] = fw_pairwise(BCQP, epsilon, MaxIter, false);
+    end
+
+    % [v, x, s] = fw_step_away ( BCQP );
+    % [v, x, s] = fw_pairwise ( BCQP );
+    logs_gaps = [logs_gaps, log.gaps]; % TODO: rename
+    times = [times, log.time];
+    iterations = [iterations, log.iteration];
+
+end
+
+mean_gaps = mean(logs_gaps, 2);
+geo_mean_gaps = geomean(logs_gaps, 2);
+mean_times = mean(times);
+mean_iterations = mean(iterations);
+
+disp('Mean times:');
+disp(mean_times);
+disp('Mean iterations:');
+disp(mean_iterations);
+
+experiment_info = struct('alg', alg, 'n', n, 'act', act, 'rank', rank, 'ecc', ecc, 'trials', trials, 'mean_gaps', mean_gaps, 'geo_mean_gaps', geo_mean_gaps, 'mean_times', mean_times, 'mean_iterations', mean_iterations);
+experiment_info_json = jsonencode(experiment_info, PrettyPrint=true);
+% save
+file_name = strcat(alg, '_', string(n), '_', string(act), '_', string(rank), '_', string(ecc), '.json');
+fid = fopen(file_name,'w');
+fprintf(fid,'%s',experiment_info_json);
+fclose(fid);
+
+end
+

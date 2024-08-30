@@ -1,4 +1,4 @@
-function [ val , varargout ] =  fw_step_away( BCQP , varargin )
+function [ val , varargout ] =  fw_away_step( BCQP , varargin )
 
 % reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -23,19 +23,7 @@ if size( BCQP.q , 2 ) ~= 1 || ~ isequal( size( BCQP.Q ) , [ n n ] ) || ...
 end
 
 if ~isempty( varargin )
-   t = varargin{ 1 };
-   if ~ isreal( t ) || ~ isscalar( t )
-      error( 't is not a real scalar' );
-   end
-   if t < 0 || t > 1
-      error( 't is not in [0, 1]' );
-   end
-else
-   t = 0;
-end
-
-if length( varargin ) > 1
-   eps = varargin{ 2 };
+   eps = varargin{ 1 };
    if ~ isreal( eps ) || ~ isscalar( eps )
       error( 'eps is not a real scalar' );
    end
@@ -43,8 +31,8 @@ else
    eps = 1e-6;
 end
 
-if length( varargin ) > 2
-   MaxIter = round( varargin{ 3 } );
+if length( varargin ) > 1
+   MaxIter = round( varargin{ 2 } );
    if ~ isscalar( MaxIter )
       error( 'MaxIter is not an integer scalar' );
    end
@@ -52,14 +40,17 @@ else
    MaxIter = 1000;
 end
 
-if length( varargin ) > 3
-   verbose = varargin{ 4 };
+if length( varargin ) > 2
+   verbose = varargin{ 3 };
    if ~ islogical( verbose ) || ~ isscalar( verbose )
       error( 'Verbose is not a logical scalar' );
    end
 else
    verbose = false;
 end
+
+time_start = tic;
+log_gap = zeros(MaxIter + 1, 1);
 
 % initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -119,6 +110,7 @@ while true
 
 
    [bestlb, gap] = get_gap(val, g, s, x, bestlb);
+   log_gap(i) = gap;
 
    if verbose
       fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\n' , i , val , bestlb , gap );
@@ -175,19 +167,24 @@ while true
 
 end
 
+time_elapsed = toc(time_start);
+
 % end of main loop- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 fprintf( 'stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n' , ...
          i , status , val , gap );
 
+log = struct('gaps', log_gap, 'solution', x, 'iteration', i, 'time', time_elapsed);
+
 if nargout > 1
-   varargout{ 1 } = x;
+   varargout{ 1 } = log;
 end
 
 if nargout > 2
    varargout{ 2 } = status;
 end
+
 
 end  % the end- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -1,4 +1,4 @@
-function problem = gen_problem(n, density, max_eig, lmin, lmax, umin, umax, seed)
+function problem = gen_problem(n, actv, density, max_eig, lmin, lmax, umin, umax, seed)
 
 rng(seed)
 
@@ -7,7 +7,8 @@ problem.l = lmin * ones( n, 1 ) + ( lmax - lmin ) * rand( n, 1 );
 problem.u = umin * ones( n , 1 ) + ( umax - umin ) * rand( n , 1 );
 
 % generate Q- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-problem.Q = sprandsym(n, density, max_eig);
+rc = rand(n, 1) * max_eig;
+problem.Q = sprandsym(n, density, rc);
 
 % generate q- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 z = zeros( n , 1 );

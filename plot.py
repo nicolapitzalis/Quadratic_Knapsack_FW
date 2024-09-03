@@ -10,11 +10,13 @@ def plot_experiments(paths):
 
         # y log scale
         plt.yscale('log')
-        plt.plot(range(len(data['geo_mean_gaps'])), data['geo_mean_gaps'], label=data['alg'])
+        plt.plot(range(len(data['mean_gaps'])), data['mean_gaps'], label=data['alg'])
         
     plt.legend()
     plt.show()
 
 if __name__ == '__main__':
-    paths = ['fw_og_100_0.6_1.1_0.999.json', 'fw_step_away_100_0.6_1.1_0.999.json', 'fw_pairwise_100_0.6_1.1_0.999.json']
+    p = "/Users/lorenzoleuzzi/Documents/MATLAB/"
+    paths = [f'{p}/fw_og_100_0.6_1_0.001.json', f'{p}/fw_away_step_100_0.6_1_0.001.json', f'{p}/fw_pairwise_100_0.6_1_0.001.json']
+    # paths = [f'{p}/fw_pairwise_100_0.6_1.1_1.json']
     plot_experiments(paths)

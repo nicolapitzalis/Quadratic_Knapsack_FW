@@ -1,8 +1,6 @@
 function [ v , varargout ] =  fw_og( BCQP , varargin )
 
-% reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+   % ----- Inputs -----
 if ~ isstruct( BCQP )
    error( 'BCQP not a struct' );
 end
@@ -48,15 +46,15 @@ if length( varargin ) > 2
 else
    verbose = false;
 end
+% ------------------
 
+% ----- Initialization -----
 time_start = tic;
 log_gap = zeros(MaxIter + 1, 1);
 
-% initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 x0 = LP(BCQP, zeros(n, 1));
 x = x0;  % start from the middle of the box
-check_feasibility(x, BCQP.l, BCQP.u, BCQP.a, BCQP.b);
+
 bestlb = - inf;  % best lower bound so far (= none, really)
 
 fprintf( 'Frank-Wolfe method\n');
@@ -65,49 +63,52 @@ if verbose
 end
 
 i = 1;
+% --------------------------
 
-% main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+% ----- Main loop -----
 while true
+   
+   % Compute the function value and gradient
    v = x' * BCQP.Q * x + BCQP.q' * x;
    g = 2 * BCQP.Q * x + BCQP.q;
 
-
+   % argmin_s {<g, s>: as >= b, l <= a <= u}
    y = LP(BCQP, g);
 
+   % Direction
+   d = y - x;
 
+   % Compute the gap
    [bestlb, gap] = get_gap(v, g, y, x, bestlb);
-   
    log_gap(i) = gap;
    
+   % Print iteration log
    if verbose
       fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\n' , i , v , bestlb , gap );
    end
 
+   % Check stopping criteria
    if gap <= eps
       status = 'optimal';
       break;
    end
-   
    if i > MaxIter
       status = 'stopped';
       break;
    end
-   % fixed step size
-   
-   d = y - x;
+
+   % Line search to find the step size
    alpha = line_search(BCQP, d, g, 1);
-   % alpha = 2 / (i + 2);
    x = x + alpha * d;
    i = i + 1;
 
 end
+% ---------------------
 
+
+% ----- Outputs -----
 time_elapsed = toc(time_start);
-
-% end of main loop- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 fprintf( 'stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n' , ...
          i , status , v , gap );
@@ -121,8 +122,9 @@ end
 if nargout > 2
    varargout{ 2 } = status;
 end
+% ---------------------
 
-end  % the end- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+end 
 
 
 

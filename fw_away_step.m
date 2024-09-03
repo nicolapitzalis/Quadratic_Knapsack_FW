@@ -1,8 +1,6 @@
-function [ val , varargout ] =  fw_away_step( BCQP , varargin )
+function [val, varargout] =  fw_away_step(BCQP, varargin)
 
-% reading and checking input- - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+% ----- Inputs -----
 if ~ isstruct( BCQP )
    error( 'BCQP not a struct' );
 end
@@ -48,130 +46,121 @@ if length( varargin ) > 2
 else
    verbose = false;
 end
+% ------------------
 
+
+% ----- Initialization -----
 time_start = tic;
 log_gap = zeros(MaxIter + 1, 1);
 
-% initializations - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 x0 = LP(BCQP, zeros(n, 1));
-x = x0;  % start from the middle of the box
+x = x0;  % Initial solution
 
-bestlb = - inf;  % best lower bound so far (= none, really)
+bestlb = - inf;  % Best lower bound so far (= none, really)
 
-S = {x0};  % Initial active set
-alpha = 1;  % Initial step_size for x0
+S = x0;  % Initialize active set
+beta = 1;  % Initial coefficient of x0
 
-fprintf( 'Frank-Wolfe method\n');
+fprintf('Frank-Wolfe method\n');
 if verbose
-   fprintf( 'iter\tf(x)\t\tlb\t\tgap\n\n' );
+    fprintf('iter\tf(x)\t\tlb\t\tgap\n\n');
 end
 
 i = 1;
+% --------------------------
 
-% main loop - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+% ----- Main loop -----
 while true
+   
+   % Compute the function value and gradient
    val = x' * BCQP.Q * x + BCQP.q' * x;
    g = 2 * BCQP.Q * x + BCQP.q;
 
-   % Compute FW direction
+   % Compute FW direction argmin_s {<g, s>: as >= b, l <= a <= u}
    s = LP(BCQP, g);
    d_fw = s - x;
 
-   % Compute Away direction
-   % disp(i)
-   
-   % iterate over the active set S
-   max_val = -inf;
-   for j = 1:length(S)
-      val_away = g' * S{j};
-      if val_away > max_val
-         max_val = val_away;
-         v_index = j;
-      end
-   end
-   % [~, v_index] = max(g' * cell2mat(S)); % argmax_{v_k in S} <g, v_k> TODO: change
-   v = S{v_index};
+   % Compute Away direction argmax_v {<g, v>, v in S}
+   [~, index_v] = max(g' * S); 
+   v = S(:, index_v);
    d_away = x - v;
 
    % Choose between Frank-Wolfe and Away direction
-   if -g' * d_fw >= -g' * d_away || isscalar(S)
+   if -g' * d_fw >= -g' * d_away || size(S, 2) == 1
       d = d_fw;
       step_size_max = 1;
-  else
-      % disp('away');
+   else
       d = d_away;
-      index_v = cellfun(@(x_) isequal(x_, v), S); % find index of v in S
-      alpha_v = alpha(index_v);
-      step_size_max = alpha_v / (1 - alpha_v);
-  end
+      beta_v = beta(index_v);
+      step_size_max = beta_v / (1 - beta_v);
+   end
 
-
+   % Compute the gap
    [bestlb, gap] = get_gap(val, g, s, x, bestlb);
    log_gap(i) = gap;
 
+   % Print iteration log
    if verbose
-      fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\n' , i , val , bestlb , gap );
+      fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\n', i, val, bestlb, gap);
    end
 
+   % Check stopping criteria
    if gap <= eps
       status = 'optimal';
       break;
    end
-   
    if i > MaxIter
       status = 'stopped';
       break;
    end
 
+   % Line search to find the step size
    step_size = line_search(BCQP, d, g, step_size_max);
    x = x + step_size * d;
    i = i + 1;
 
-   % Update the active set S
+   % Update the active set S and the coefficients beta
    if d == d_fw
-      index_s = cellfun(@(x_) isequal(x_, s), S); % find index of s in S
+      % Frank-Wolfe step case
+      beta = (1 - step_size) * beta; % Update beta
       
-      if all(index_s == 0) % s not in S
-         alpha_s = step_size; 
-         alpha = (1 - step_size) * alpha;
-         % alpha = [alpha; alpha_s];
-         if step_size < step_size_max
-            S = [S; s];
-            alpha = [alpha; alpha_s];
-         end
+      [found, index_s] = ismember(s', S', 'rows');
+      % Update beta_s
+      if ~found  % s not in S
+         beta_s = step_size;   
       else
-         alpha_s = alpha(index_s);
-         alpha = (1 - step_size) * alpha;
-         alpha(index_s) = (1 - step_size) * alpha_s + step_size;
+         beta_s = beta(index_s);
+         beta(index_s) = (1 - step_size) * beta_s + step_size;
       end
 
-      if step_size == step_size_max
-         S = {s};
-         alpha = alpha_s;
+      if step_size < step_size_max && ~found
+         S = [S, s];  % Add s to S % consider preallocating 1000 iterations
+         beta = [beta; beta_s]; % Add beta_s to beta
       end
-  else
-      % Away step case
-      index_v = cellfun(@(x_) isequal(x_, v), S); % find index of v in S
-      alpha_v = alpha(index_v);
-      alpha = (1 + step_size) * alpha;
-      alpha(index_v) = (1 + step_size) * alpha_v - step_size;
+      if step_size == step_size_max
+         S = s;  % Reset S to only contain s
+         beta = beta_s;
+      end
+    
+      else
+         % Away step case
+         beta = (1 + step_size) * beta;
+         beta(index_v) = (1 + step_size) * beta_v - step_size;
 
-      if step_size == step_size_max
-         S(v_index) = [];
-         alpha(v_index) = [];
-      end
-  end
+         if step_size == step_size_max
+               S(:, index_v) = [];  % Remove column corresponding to v
+               beta(index_v) = [];
+         end
+    end
 
 end
 
 time_elapsed = toc(time_start);
+% ---------------------
 
-% end of main loop- - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+% ----- Outputs -----
 fprintf( 'stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n' , ...
          i , status , val , gap );
 
@@ -184,9 +173,9 @@ end
 if nargout > 2
    varargout{ 2 } = status;
 end
+% ---------------------
 
-
-end  % the end- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+end 
 
 
 

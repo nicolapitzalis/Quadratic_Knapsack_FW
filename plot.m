@@ -1,4 +1,4 @@
-function plot_experiment(paths)
+function plot(paths)
     figure;
     
     for i = 1:length(paths)

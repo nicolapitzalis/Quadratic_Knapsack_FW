@@ -22,7 +22,7 @@ l = outb & lr;
 r = outb & ~ lr;
 
 % a random amount left of the lb (0)
-z( l ) = - rand( sum( l ) , 1 ) .* problem.u( l );
+z( l ) = problem.l( l ) .* (rand( sum( l ) , 1 ) - 1);
 
 % a random amount right of the ub (u)
 z( r ) = problem.u( r ) .* ( 1 + rand( sum( r ) , 1 ) );
@@ -31,7 +31,7 @@ outb = ~ outb;  % entries that will be inside the bound
 % pick at random in [ 0 , u ]
 z( outb ) = rand( sum( outb ) , 1 ) .* problem.u( outb );
 
-problem.q = - 0.5 * problem.Q * z;
+problem.q = - 2 * problem.Q * z;
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 % generate ax=b - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

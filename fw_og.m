@@ -67,16 +67,16 @@ function [val, varargout] =  fw_og(P, varargin)
 
    bestlb = - inf;  % best lower bound so far (= none, really)
 
-fprintf( 'Frank-Wolfe method\n');
-if verbose
-   fprintf( 'iter\tf(x)\t\tlb\t\tgap\t\tprimal\t\ttheoretical_bound\n\n' );
-end
+   fprintf( 'Frank-Wolfe method\n');
+   if verbose
+      fprintf( 'iter\tf(x)\t\tlb\t\tgap\t\tprimal\t\ttheoretical_bound\n\n' );
+   end
 
    i = 1;
    % --------------------------
 
-curvature = curvature_function(BCQP);
-gamma = 27/8;
+   curvature = curvature_function(P);
+   gamma = 27/8;
 
    % ----- Main loop -----
    while true
@@ -104,7 +104,7 @@ gamma = 27/8;
       theoretical_bound = (2 * gamma * curvature)/(i+2);
       % Print iteration log
       if verbose
-         fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\t%1.4e\n' , i, val, bestlb, gap, primal_error, theoretical_bound);
+         fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\t%1.4e\n', i, val, bestlb, gap, primal_error, theoretical_bound);
       end
 
       % Check stopping criteria

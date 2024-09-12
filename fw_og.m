@@ -67,14 +67,16 @@ function [val, varargout] =  fw_og(P, varargin)
 
    bestlb = - inf;  % best lower bound so far (= none, really)
 
-   fprintf( 'Frank-Wolfe method\n');
-   if verbose
-      fprintf( 'iter\tf(x)\t\tlb\t\tgap\n\n' );
-   end
+fprintf( 'Frank-Wolfe method\n');
+if verbose
+   fprintf( 'iter\tf(x)\t\tlb\t\tgap\t\tprimal\t\ttheoretical_bound\n\n' );
+end
 
    i = 1;
    % --------------------------
 
+curvature = curvature_function(BCQP);
+gamma = 27/8;
 
    % ----- Main loop -----
    while true
@@ -99,9 +101,10 @@ function [val, varargout] =  fw_og(P, varargin)
          log_primal_error(i) = primal_error;
       end
       
+      theoretical_bound = (2 * gamma * curvature)/(i+2);
       % Print iteration log
       if verbose
-         fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\n' , i, val, bestlb, gap, primal_error);
+         fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\t%1.4e\n' , i, val, bestlb, gap, primal_error, theoretical_bound);
       end
 
       % Check stopping criteria
@@ -126,7 +129,7 @@ function [val, varargout] =  fw_og(P, varargin)
    % ----- Outputs -----
    time_elapsed = toc(time_start);
    
-   fprintf( 'stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e, primal = %1.4e\n' , ...
+   fprintf('stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e, primal = %1.4e\n' , ...
             i, status, val, gap, primal_error);
 
    log = struct('gaps', log_gap, 'primals', log_primal_error, 'iteration', i, 'time', time_elapsed);

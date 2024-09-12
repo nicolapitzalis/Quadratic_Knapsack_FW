@@ -30,7 +30,7 @@ function [val, varargout] =  fw_away_step(P, varargin)
    end
 
    if length(varargin) > 1
-      MaxIter = round( varargin{2} );
+      MaxIter = round(varargin{2});
       if ~ isscalar(MaxIter)
          error('MaxIter is not an integer scalar');
       end

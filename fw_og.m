@@ -44,7 +44,7 @@ if length( varargin ) > 2
       error( 'Verbose is not a logical scalar' );
    end
 else
-   verbose = false;
+   verbose = true;
 end
 % ------------------
 
@@ -59,12 +59,14 @@ bestlb = - inf;  % best lower bound so far (= none, really)
 
 fprintf( 'Frank-Wolfe method\n');
 if verbose
-   fprintf( 'iter\tf(x)\t\tlb\t\tgap\n\n' );
+   fprintf( 'iter\tf(x)\t\tlb\t\tgap\ttheoretical_bound\n\n' );
 end
 
 i = 1;
 % --------------------------
 
+curvature = curvature_function(BCQP);
+gamma = 27/8;
 
 % ----- Main loop -----
 while true
@@ -82,10 +84,12 @@ while true
    % Compute the gap
    [bestlb, gap] = get_gap(v, g, y, x, bestlb);
    log_gap(i) = gap;
-   
+  
+   theo_bound = (2 * gamma * curvature)/(i+2);
+
    % Print iteration log
    if verbose
-      fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\n' , i , v , bestlb , gap );
+      fprintf( '%4d\t%1.8e\t%1.8e\t%1.4e\t%1.8e\n' , i , v , bestlb , gap, theo_bound );
    end
 
    % Check stopping criteria

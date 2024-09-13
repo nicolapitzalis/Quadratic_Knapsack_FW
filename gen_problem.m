@@ -20,8 +20,14 @@ D = diag(eigenvalues);
 problem.Q = U * D * U';
 
 % Apply sparsity pattern (if density < 1), keep dense if density = 1
+% Apply sparsity pattern (if density < 1), keep dense if density = 1
 if density < 1
-    problem.Q = sprandsym(problem.Q, density);
+    % Create a random mask with the given density
+    mask = rand(n) < density;
+    % Ensure symmetry of the mask
+    mask = triu(mask, 0) + triu(mask, 1)';
+    % Apply mask to make problem.Q sparse while keeping symmetry
+    problem.Q = problem.Q .* mask;
 end
 
 % generate q- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

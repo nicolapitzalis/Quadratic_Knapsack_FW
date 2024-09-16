@@ -13,7 +13,7 @@ function run_experiments()
     test_quad('fw_away_step', epsilon, max_iter, base_n, base_actv, base_density, base_cond_num, trials, 'results/convergence');
     test_quad('fw_pairwise', epsilon, max_iter, base_n, base_actv, base_density, base_cond_num, trials, 'results/convergence');
 
-    n_values = [50, 100, 500, 1000, 5000, 10000]; % Varying the size
+    n_values = [10, 50, 100, 200, 500]; % Varying the size
     for n = n_values
         n_str = strrep(num2str(n), '.', '_');
         experiment_path = strcat('results/n/', n_str);
@@ -52,3 +52,74 @@ function run_experiments()
         test_quad('fw_pairwise', epsilon, max_iter, base_n, base_actv, base_density, cond_num, trials, experiment_path);
         plot_comparison(experiment_path);
     end
+
+    big_n_values = [100, 500, 1000, 5000];
+    density_for_big = 0.1;
+    for n = big_n_values
+        n_str = strrep(num2str(n), '.', '_');
+        experiment_path = strcat('results/n_sparse/', n_str);
+        test_quad('fw_og', epsilon, max_iter, n, base_actv, density_for_big, base_cond_num, trials, experiment_path);
+        test_quad('fw_away_step', epsilon, max_iter, n, base_actv, density_for_big, base_cond_num, trials, experiment_path);
+        test_quad('fw_pairwise', epsilon, max_iter, n, base_actv, density_for_big, base_cond_num, trials, experiment_path);
+        plot_comparison(experiment_path);
+    end
+
+    huge_n_values = [500, 1000, 5000, 10000];
+    density_for_huge = 0.01;
+    for n = huge_n_values
+        n_str = strrep(num2str(n), '.', '_');
+        experiment_path = strcat('results/n_very_sparse/', n_str);
+        test_quad('fw_og', epsilon, max_iter, n, base_actv, density_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_away_step', epsilon, max_iter, n, base_actv, density_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_pairwise', epsilon, max_iter, n, base_actv, density_for_huge, base_cond_num, trials, experiment_path);
+        plot_comparison(experiment_path);
+    end
+
+    huge_n_values = [500, 1000, 5000, 10000];
+    density_smaller_for_huge = 0.001;
+    for n = huge_n_values
+        n_str = strrep(num2str(n), '.', '_');
+        experiment_path = strcat('results/n_very_very_sparse/', n_str);
+        test_quad('fw_og', epsilon, max_iter, n, base_actv, density_smaller_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_away_step', epsilon, max_iter, n, base_actv, density_smaller_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_pairwise', epsilon, max_iter, n, base_actv, density_smaller_for_huge, base_cond_num, trials, experiment_path);
+        plot_comparison(experiment_path);
+    end
+
+    big_n_values = [100, 500, 1000, 5000];
+    density_for_big = 0.1;
+    actv = 1.0;
+    for n = big_n_values
+        n_str = strrep(num2str(n), '.', '_');
+        experiment_path = strcat('results/n_sparse_all_active/', n_str);
+        test_quad('fw_og', epsilon, max_iter, n, actv, density_for_big, base_cond_num, trials, experiment_path);
+        test_quad('fw_away_step', epsilon, max_iter, n, actv, density_for_big, base_cond_num, trials, experiment_path);
+        test_quad('fw_pairwise', epsilon, max_iter, n, actv, density_for_big, base_cond_num, trials, experiment_path);
+        plot_comparison(experiment_path);
+    end
+
+    huge_n_values = [500, 1000, 5000, 10000];
+    density_for_huge = 0.01;
+    actv = 1.0;
+    for n = huge_n_values
+        n_str = strrep(num2str(n), '.', '_');
+        experiment_path = strcat('results/n_very_sparse_all_active/', n_str);
+        test_quad('fw_og', epsilon, max_iter, n, actv, density_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_away_step', epsilon, max_iter, n, actv, density_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_pairwise', epsilon, max_iter, n, actv, density_for_huge, base_cond_num, trials, experiment_path);
+        plot_comparison(experiment_path);
+    end
+
+    huge_n_values = [500, 1000, 5000, 10000];
+    density_smaller_for_huge = 0.001;
+    actv = 1.0;
+    for n = huge_n_values
+        n_str = strrep(num2str(n), '.', '_');
+        experiment_path = strcat('results/n_very_very_sparse_all_active/', n_str);
+        test_quad('fw_og', epsilon, max_iter, n, actv, density_smaller_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_away_step', epsilon, max_iter, n, actv, density_smaller_for_huge, base_cond_num, trials, experiment_path);
+        test_quad('fw_pairwise', epsilon, max_iter, n, actv, density_smaller_for_huge, base_cond_num, trials, experiment_path);
+        plot_comparison(experiment_path);
+    end
+
+

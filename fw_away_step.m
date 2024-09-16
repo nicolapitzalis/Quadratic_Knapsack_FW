@@ -53,7 +53,7 @@ function [val, varargout] =  fw_away_step(P, varargin)
          error('Verbose is not a logical scalar');
       end
    else
-      verbose = false;
+      verbose = true;
    end
    % ------------------
 
@@ -114,6 +114,8 @@ function [val, varargout] =  fw_away_step(P, varargin)
       if ~isnan(solution)
          primal_error = abs(val - solution);
          log_primal_error(i) = primal_error;
+      else
+          primal_error = NaN;
       end
 
       % Print iteration log

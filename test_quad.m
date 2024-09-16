@@ -1,6 +1,6 @@
-function test_quad(alg, epsilon, max_iter, n, actv, density, cond_num, trials, path)
+function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
 
-    % profile on
+%     profile on
 
     logs_gaps = [];
     logs_primals = [];
@@ -22,7 +22,7 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, cond_num, trials, p
 
     for i = 1:trials
         
-        P = gen_problem(n, actv, density, cond_num, lmin, lmax, umin, umax, i);
+        P = gen_problem(n, actv, density, rc, lmin, lmax, umin, umax, i);
         
         % Define the options for quadprog with the desired tolerance
         options = optimoptions('quadprog', 'TolFun', 1e-16);
@@ -75,10 +75,10 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, cond_num, trials, p
     disp('Mean iterations:');
     disp(mean_iterations);
 
-    experiment_info = struct('alg', alg, 'n', n, 'actv', actv, 'density', density, 'cond_num', cond_num, 'trials', trials, 'mean_gaps', mean_gaps, 'geo_mean_gaps', geo_mean_gaps, 'mean_times', mean_times, 'mean_iterations', mean_iterations);
+    experiment_info = struct('alg', alg, 'n', n, 'actv', actv, 'density', density, 'rc', rc, 'trials', trials, 'mean_gaps', mean_gaps, 'geo_mean_gaps', geo_mean_gaps, 'mean_times', mean_times, 'mean_iterations', mean_iterations);
     experiment_info_json = jsonencode(experiment_info, PrettyPrint=true);
     % Save experiment info to a file
-    experiment_path = strcat(string(alg), '_', string(n), '_', string(actv), '_', string(density), '_', string(cond_num));
+    experiment_path = strcat(string(alg), '_', string(n), '_', string(actv), '_', string(density), '_', string(rc));
     save_path = strcat(path, '/', experiment_path);
 
     if ~exist(save_path, 'dir')

@@ -53,7 +53,13 @@ function [val, varargout] =  fw_og(P, varargin)
          error('Verbose is not a logical scalar');
       end
    else
-      verbose = false;
+      verbose = true;
+   end
+   
+   if length(varargin) > 4
+       is_theo_bound = varargin{5};
+   else
+       is_theo_bound = false;
    end
    % ------------------
 
@@ -75,8 +81,10 @@ function [val, varargout] =  fw_og(P, varargin)
    i = 1;
    % --------------------------
 
-   curvature = curvature_function(P);
-   gamma = 27/8;
+   if is_theo_bound
+       curvature = curvature_function(P);
+       gamma = 27/8;
+   end
 
    % ----- Main loop -----
    while true
@@ -99,9 +107,16 @@ function [val, varargout] =  fw_og(P, varargin)
       if ~isnan(solution)
          primal_error = abs(val - solution);
          log_primal_error(i) = primal_error;
+      else
+          primal_error = NaN;
       end
       
-      theoretical_bound = (2 * gamma * curvature)/(i+2);
+      if is_theo_bound
+        theoretical_bound = (2 * gamma * curvature)/(i+2);
+      else
+        theoretical_bound = NaN;
+      end
+
       % Print iteration log
       if verbose
          fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\t%1.4e\n', i, val, bestlb, gap, primal_error, theoretical_bound);

@@ -1,4 +1,4 @@
-function problem = gen_problem(n, actv, density, cond_num, lmin, lmax, umin, umax, seed)
+function problem = gen_problem(n, actv, density, rc, lmin, lmax, umin, umax, seed)
 
 rng(seed)
 
@@ -7,28 +7,7 @@ problem.l = lmin * ones( n, 1 ) + ( lmax - lmin ) * rand( n, 1 );
 problem.u = umin * ones( n , 1 ) + ( umax - umin ) * rand( n , 1 );
 
 % generate Q- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% Max eigenvalue is 1, control the smallest eigenvalue based on the condition number
-max_eig = 1;  % Fix max eigenvalue to 1 for simplicity
-min_eig = max_eig / cond_num;  % Compute smallest eigenvalue based on condition number
-eigenvalues = linspace(min_eig, max_eig, n);  % Linearly spaced eigenvalues
-
-% Create a random orthogonal matrix
-[U, ~] = qr(randn(n)); 
-
-% Construct Q with controlled eigenvalues: Q = U * D * U^T
-D = diag(eigenvalues);
-problem.Q = U * D * U';
-
-% Apply sparsity pattern (if density < 1), keep dense if density = 1
-% Apply sparsity pattern (if density < 1), keep dense if density = 1
-if density < 1
-    % Create a random mask with the given density
-    mask = rand(n) < density;
-    % Ensure symmetry of the mask
-    mask = triu(mask, 0) + triu(mask, 1)';
-    % Apply mask to make problem.Q sparse while keeping symmetry
-    problem.Q = problem.Q .* mask;
-end
+problem.Q = sprandsym(n, density, rc, 1);
 
 % generate q- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 z = zeros(n, 1);

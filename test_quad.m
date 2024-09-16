@@ -3,7 +3,6 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
 %     profile on
 
     logs_gaps = [];
-    logs_primals = [];
     times = [];
     iterations = [];
 
@@ -30,17 +29,16 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
         
         [~, golden_val, ~, ~] = quadprog(2 * P.Q, P.q, -P.a', -P.b, [], [], P.l, P.u, [], options);
         if strcmp(alg, 'fw_og')
-            [val, ~, ~, log] = fw_og(P, epsilon, max_iter, golden_val, false);
+            [val, ~, ~, log] = fw_og(P, epsilon, max_iter, false);
         elseif strcmp(alg, 'fw_away_step')
-            [val, ~, ~, log] = fw_away_step(P, epsilon, max_iter, golden_val, false);
+            [val, ~, ~, log] = fw_away_step(P, epsilon, max_iter, false);
         elseif strcmp(alg, 'fw_pairwise')
-            [val, ~, ~, log] = fw_pairwise(P, epsilon, max_iter, golden_val, false);
+            [val, ~, ~, log] = fw_pairwise(P, epsilon, max_iter, false);
         end
 
         % replace negative values with 0
         log.gaps(log.gaps < 0.0) = 0;
         logs_gaps = [logs_gaps, log.gaps]; % TODO: rename
-        logs_primals = [logs_primals, log.primals];
         times = [times, log.time];
         iterations = [iterations, log.iteration];
         

@@ -6,17 +6,17 @@ function [val, varargout] =  fw_og(P, varargin)
    end
 
    if ~isfield(P, 'Q') || ~ isfield(P, 'q') || ...
-      ~isfield(P, 'u')
+      ~isfield(P, 'u') || ~isfield(P, 'l')
       error('P not a well-formed struct');
    end
 
-   if ~ isreal(P.Q) || ~isreal(P.q) || ~isreal(P.u)
+   if ~ isreal(P.Q) || ~isreal(P.q) || ~isreal(P.u) || ~isreal(P.l)
       error( 'P not a well-formed struct' );
    end
 
    n = size(P.q, 1);
    if size(P.q, 2) ~= 1 || ~isequal(size(P.Q), [n n]) || ...
-      ~isequal(size(P.u), [n 1])
+      ~isequal(size(P.u), [n 1]) || ~isequal(size(P.l), [n 1])
       error('P not a well-formed struct');
    end
 
@@ -39,16 +39,7 @@ function [val, varargout] =  fw_og(P, varargin)
    end
 
    if length(varargin) > 2
-      solution = varargin{3};
-      if ~isreal(eps) || ~isscalar(eps)
-         error('Solution is not a real scalar');
-      end
-   else
-      solution = NaN;
-   end
-
-   if length(varargin) > 3
-      verbose = varargin{4};
+      verbose = varargin{3};
       if ~islogical(verbose) || ~isscalar(verbose)
          error('Verbose is not a logical scalar');
       end
@@ -56,8 +47,8 @@ function [val, varargout] =  fw_og(P, varargin)
       verbose = true;
    end
    
-   if length(varargin) > 4
-       is_theo_bound = varargin{5};
+   if length(varargin) > 3
+       is_theo_bound = varargin{4};
    else
        is_theo_bound = false;
    end
@@ -66,7 +57,6 @@ function [val, varargout] =  fw_og(P, varargin)
    % ----- Initialization -----
    time_start = tic;
    log_gap = zeros(MaxIter + 1, 1);
-   log_primal_error = zeros(MaxIter + 1, 1);
 
    x0 = LP(P, zeros(n, 1));
    x = x0;  % start from the middle of the box
@@ -75,7 +65,7 @@ function [val, varargout] =  fw_og(P, varargin)
 
    fprintf( 'Frank-Wolfe method\n');
    if verbose
-      fprintf( 'iter\tf(x)\t\tlb\t\tgap\t\tprimal\t\ttheoretical_bound\n\n' );
+      fprintf( 'iter\tf(x)\t\tlb\t\tgap\t\ttheoretical_bound\n\n' );
    end
 
    i = 1;
@@ -102,14 +92,6 @@ function [val, varargout] =  fw_og(P, varargin)
       % Compute the gap
       [bestlb, gap] = get_gap(val, g, y, x, bestlb);
       log_gap(i) = gap;
-
-      % Compute the primal error
-      if ~isnan(solution)
-         primal_error = abs(val - solution);
-         log_primal_error(i) = primal_error;
-      else
-          primal_error = NaN;
-      end
       
       if is_theo_bound
         theoretical_bound = (2 * gamma * curvature)/(i+2);
@@ -119,7 +101,7 @@ function [val, varargout] =  fw_og(P, varargin)
 
       % Print iteration log
       if verbose
-         fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\t%1.4e\n', i, val, bestlb, gap, primal_error, theoretical_bound);
+         fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\n', i, val, bestlb, gap, theoretical_bound);
       end
 
       % Check stopping criteria
@@ -144,10 +126,9 @@ function [val, varargout] =  fw_og(P, varargin)
    % ----- Outputs -----
    time_elapsed = toc(time_start);
    
-   fprintf('stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e, primal = %1.4e\n' , ...
-            i, status, val, gap, primal_error);
+   fprintf('stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n', i, status, val, gap);
 
-   log = struct('gaps', log_gap, 'primals', log_primal_error, 'iteration', i, 'time', time_elapsed);
+   log = struct('gaps', log_gap, 'iteration', i, 'time', time_elapsed);
 
    if nargout > 1
       varargout{1} = x;

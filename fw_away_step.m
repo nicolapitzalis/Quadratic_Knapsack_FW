@@ -58,8 +58,16 @@ function [val, varargout] =  fw_away_step(P, varargin)
 
    bestlb = - inf;  % Best lower bound so far (= none, really)
 
-   S = x0;  % Initialize active set
-   beta = 1;  % Initial coefficient of x0
+   % Initialize map for fast lookup
+   S_map = containers.Map();  % Create an empty map
+   S_keys = {};               % To store string keys representing vectors in S
+
+   % Convert the initial point x0 to a key and add to the map
+   key_x0 = mat2str(x0', 16);  % Convert vector to string with high precision
+   S_map(key_x0) = 1;          % Map the string to index 1
+   S_keys{1} = key_x0;         % Store the key
+   S = x0;                     % Initialize active set S with x0
+   beta = 1;                   % Initialize beta with coefficient of x0
 
    fprintf('Frank-Wolfe method\n');
    if verbose
@@ -124,34 +132,64 @@ function [val, varargout] =  fw_away_step(P, varargin)
          % Frank-Wolfe step case
          beta = (1 - step_size) * beta; % Update beta
          
-         [found, index_s] = ismembertol(s', S', 'ByRows', true);
-         % [found, index_s] = ismember(s', S', 'rows');
-         % Update beta_s
-         if ~found  % s not in S
-            beta_s = step_size;   
+         % [found, index_s] = ismembertol(s', S', 'ByRows', true);
+         % % [found, index_s] = ismember(s', S', 'rows');
+         % % Update beta_s
+         % if ~found  % s not in S
+         %    beta_s = step_size;   
+         % else
+         %    beta_s = beta(index_s);
+         %    beta(index_s) = (1 - step_size) * beta_s + step_size;
+         % end
+         % Convert the new vector s to a key
+         key_s = mat2str(s', 16);  % Convert the vector to a string with high precision
+         found = isKey(S_map, key_s);
+         
+         if ~found
+            beta_s = step_size;
          else
+            index_s = S_map(key_s);
             beta_s = beta(index_s);
             beta(index_s) = (1 - step_size) * beta_s + step_size;
          end
 
          if step_size < step_size_max && ~found
-            S = [S, s];  % Add s to S % consider preallocating 1000 iterations
-            beta = [beta; beta_s]; % Add beta_s to beta
+            S = [S, s];  % Add the new direction to S
+            beta = [beta; step_size];  % Add the new coefficient to beta
+            S_map(key_s) = size(S, 2);  % Map the string key to the new index in S
+            S_keys{end + 1} = key_s;    % Store the key
          end
+
          if abs(step_size - step_size_max) <= 1e-8 % TODO: this tolerance as global variable or input
+            % Reset S to only contain s
             S = s;  % Reset S to only contain s
             beta = beta_s;
+            S_map = containers.Map();  % Create an empty map
+            S_keys = {};               % To store string keys representing vectors in S
+            S_map(key_s) = 1;          % Map the string to index 1
+            S_keys{1} = key_s;         % Store the key
          end
       
-         else
-            % Away step case
-            beta = (1 + step_size) * beta;
-            beta(index_v) = (1 + step_size) * beta_v - step_size;
+      else
+         % Away step case
+         % Convert vector v to a string key
+         key_v = mat2str(v', 16);  % Convert the vector to a string with high precision
 
-            if abs(step_size - step_size_max) <= 1e-8
-                  S(:, index_v) = [];  % Remove column corresponding to v
-                  beta(index_v) = [];
-            end
+         beta = (1 + step_size) * beta;
+         beta(index_v) = (1 + step_size) * beta_v - step_size;
+
+         if abs(step_size - step_size_max) <= 1e-8
+               S(:, index_v) = [];  % Remove column corresponding to v
+               beta(index_v) = [];
+               % Remove the entry from the map and adjust indices
+               remove(S_map, key_v);  % Remove the vector from the map
+               S_keys(index_v) = [];  % Remove the key from the key list
+   
+               % Update the map for all remaining keys in S
+               for j = index_v:length(S_keys)
+                     S_map(S_keys{j}) = j;  % Adjust the index in the map
+               end
+         end
       end
 
       i = i + 1;

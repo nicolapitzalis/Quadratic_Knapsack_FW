@@ -65,7 +65,7 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
     mean_iterations = mean(iterations);
 
     % Plot mean log gap
-    semilogy(1:length(mean_gaps), mean_gaps, '-', 'LineWidth', 3, 'Color', 'blue');
+    semilogy(1:length(geo_mean_gaps), geo_mean_gaps, '-', 'LineWidth', 3, 'Color', 'blue');
     hold off;
 
     disp('Mean times:');

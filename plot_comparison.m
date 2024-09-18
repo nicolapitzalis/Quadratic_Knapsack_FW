@@ -39,11 +39,11 @@ function plot_comparison(experiment_path)
 
     % Plot the mean gaps
     fig = figure('Visible', 'off');
-    semilogy(1:length(fw_og_log.mean_gaps), fw_og_log.mean_gaps, '-', 'LineWidth', 3, 'Color', 'blue', 'DisplayName', 'fw og');
+    semilogy(1:length(fw_og_log.geo_mean_gaps), fw_og_log.geo_mean_gaps, '-', 'LineWidth', 3, 'Color', 'blue', 'DisplayName', 'fw og');
     hold on;
-    semilogy(1:length(fw_away_step_log.mean_gaps), fw_away_step_log.mean_gaps, '-', 'LineWidth', 3, 'Color', 'red', 'DisplayName', 'fw away step');
+    semilogy(1:length(fw_away_step_log.geo_mean_gaps), fw_away_step_log.geo_mean_gaps, '-', 'LineWidth', 3, 'Color', 'red', 'DisplayName', 'fw away step');
     hold on;
-    semilogy(1:length(fw_pairwise_log.mean_gaps), fw_pairwise_log.mean_gaps, '-', 'LineWidth', 3, 'Color', 'green', 'DisplayName', 'fw pairwise');
+    semilogy(1:length(fw_pairwise_log.geo_mean_gaps), fw_pairwise_log.geo_mean_gaps, '-', 'LineWidth', 3, 'Color', 'green', 'DisplayName', 'fw pairwise');
 
     % Specify the axis names
     xlabel('Iterations'); 

@@ -2,12 +2,12 @@ function run_experiments()
    
     base_n = 100; 
     base_actv = 0.7;
-    base_density = 1.0;
-    base_cond_num = 0.001;
+    base_density = 0.9;
+    base_cond_num = 0.1;
     trials = 2;
 
-    epsilon = 1e-8;
-    max_iter = 5000;
+    epsilon = 1e-16;
+    max_iter = 1500;
     
     test_quad('fw_og', epsilon, max_iter, base_n, base_actv, base_density, base_cond_num, trials, 'results/convergence');
     test_quad('fw_away_step', epsilon, max_iter, base_n, base_actv, base_density, base_cond_num, trials, 'results/convergence');
@@ -53,7 +53,7 @@ function run_experiments()
         plot_comparison(experiment_path);
     end
 
-    big_n_values = [100, 500, 1000, 5000];
+    big_n_values = [500, 1000];
     density_for_big = 0.1;
     for n = big_n_values
         n_str = strrep(num2str(n), '.', '_');
@@ -64,7 +64,7 @@ function run_experiments()
         plot_comparison(experiment_path);
     end
 
-    huge_n_values = [500, 1000, 5000, 10000];
+    huge_n_values = [5000, 10000];
     density_for_huge = 0.01;
     for n = huge_n_values
         n_str = strrep(num2str(n), '.', '_');
@@ -75,7 +75,7 @@ function run_experiments()
         plot_comparison(experiment_path);
     end
 
-    huge_n_values = [500, 1000, 5000, 10000];
+    huge_n_values = [5000, 10000];
     density_smaller_for_huge = 0.001;
     for n = huge_n_values
         n_str = strrep(num2str(n), '.', '_');
@@ -86,7 +86,7 @@ function run_experiments()
         plot_comparison(experiment_path);
     end
 
-    big_n_values = [100, 500, 1000, 5000];
+    big_n_values = [500, 1000];
     density_for_big = 0.1;
     actv = 1.0;
     for n = big_n_values
@@ -98,7 +98,7 @@ function run_experiments()
         plot_comparison(experiment_path);
     end
 
-    huge_n_values = [500, 1000, 5000, 10000];
+    huge_n_values = [5000, 10000];
     density_for_huge = 0.01;
     actv = 1.0;
     for n = huge_n_values
@@ -110,7 +110,7 @@ function run_experiments()
         plot_comparison(experiment_path);
     end
 
-    huge_n_values = [500, 1000, 5000, 10000];
+    huge_n_values = [5000, 10000];
     density_smaller_for_huge = 0.001;
     actv = 1.0;
     for n = huge_n_values

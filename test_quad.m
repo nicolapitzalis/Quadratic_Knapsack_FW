@@ -18,7 +18,7 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
     if ~ismember(alg, {'quadprog', 'fw_og', 'fw_away_step', 'fw_pairwise'})
         error('alg is not in ["fw_og", "fw_away_step", "fw_pairwise"]');
     end
-
+    tic % start timer
     for i = 1:trials
         
         P = gen_problem(n, actv, density, rc, lmin, lmax, umin, umax, i);
@@ -39,6 +39,7 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
         % replace negative values with 0
         log.gaps(log.gaps < 0.0) = 0;
         logs_gaps = [logs_gaps, log.gaps]; % TODO: rename
+        
         times = [times, log.time];
         iterations = [iterations, log.iteration];
         
@@ -55,7 +56,9 @@ function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
         end
 
     end
-
+    disp('Time elapsed:');
+    disp(toc); % end timer
+     % disp(size(logs_gaps));
     disp('Differing solutions count:');
     disp(differing_solutions_count);
 

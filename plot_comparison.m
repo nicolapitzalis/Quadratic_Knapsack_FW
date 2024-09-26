@@ -52,10 +52,19 @@ function plot_comparison(experiment_path)
     % Add a title
     experiment_str = strrep(experiment_path, 'results/', ' ');
     experiment_str = strrep(experiment_str, '/', ': ');
+    experiment_str = strrep(experiment_str, '_', '\_');
     plot_title = strcat('Comparison for ', experiment_str);
     title(plot_title);
 
     % Add a legend to distinguish the lines
     legend('show');
+
+    % Grid for better visualization
+    grid on;
+
     % Save the plot
-    saveas(fig, strcat(experiment_path, '/comparison_plot.png'));
+    experiment_str = strrep(experiment_str, ': ', '_');
+    experiment_str = strrep(experiment_str, '\_', '_');
+    experiment_str = strrep(experiment_str, ' ', ''); % delete white spaces
+    % experiment_str = strrep(experiment_str, ' ', '_');
+    saveas(fig, strcat(experiment_path, '/', experiment_str, '_comparison_plot.png'));

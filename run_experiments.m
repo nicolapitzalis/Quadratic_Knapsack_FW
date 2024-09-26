@@ -123,12 +123,18 @@ function run_experiments()
         plot_comparison(experiment_path);
     end
 
+    winner_max_iter = 100000;
+    test_quad_parallel('fw_og', epsilon, winner_max_iter, base_n, base_actv, base_density, base_rc, trials, 'results/base_winner');
+    test_quad_parallel('fw_away_step', epsilon, winner_max_iter, base_n, base_actv, base_density, base_rc, trials, 'results/base_winner');
+    test_quad_parallel('fw_pairwise', epsilon, winner_max_iter, base_n, base_actv, base_density, base_rc, trials, 'results/base_winner');
+    plot_comparison('results/base_winner');
+    
     winner_density = 0.1;
     winner_n = 1000;
     winner_max_iter = 100000;
-    test_quad_parallel('fw_og', epsilon, winner_max_iter, winner_n, base_actv, winner_density, base_rc, trials, 'results/winner');
-    test_quad_parallel('fw_away_step', epsilon, winner_max_iter, winner_n, base_actv, winner_density, base_rc, trials, 'results/winner');
-    test_quad_parallel('fw_pairwise', epsilon, winner_max_iter, winner_n, base_actv, winner_density, base_rc, trials, 'results/winner');
-    plot_comparison('results/winner');
+    test_quad_parallel('fw_og', epsilon, winner_max_iter, winner_n, base_actv, winner_density, base_rc, trials, 'results/big_matrix_winner');
+    test_quad_parallel('fw_away_step', epsilon, winner_max_iter, winner_n, base_actv, winner_density, base_rc, trials, 'results/big_matrix_winner');
+    test_quad_parallel('fw_pairwise', epsilon, winner_max_iter, winner_n, base_actv, winner_density, base_rc, trials, 'results/big_matrix_winner');
+    plot_comparison('results/big_matrix_winner');
 
 

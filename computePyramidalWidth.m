@@ -18,15 +18,17 @@ function pyramidalWidth = computePyramidalWidth(a, b, l, u, num_samples)
     % Loop through each sampled direction
     for i = 1:num_samples
         r = directions(i, :);  % Current direction
+        
+        options = optimoptions('linprog', 'Display', 'none');
 
         % Solve LP to maximize the dot product in the direction of r
-        [x_max, fval_max] = linprog(-r, -a', -b, [], [], l, u);  % Maximize r'x
+        [x_max, fval_max] = linprog(-r, -a', -b, [], [], l, u, options);  % Maximize r'x
         if isempty(x_max) || a' * x_max < b
             continue;  % Skip if no feasible solution or doesn't satisfy a'x >= b
         end
 
         % Solve LP to minimize the dot product in the direction of r
-        [x_min, fval_min] = linprog(r, -a', -b, [], [], l, u);  % Minimize r'x
+        [x_min, fval_min] = linprog(r, -a', -b, [], [], l, u, options);  % Minimize r'x
         if isempty(x_min) || a' * x_min < b
             continue;  % Skip if no feasible solution or doesn't satisfy a'x >= b
         end
@@ -42,7 +44,5 @@ function pyramidalWidth = computePyramidalWidth(a, b, l, u, num_samples)
 
     if pyramidalWidth == Inf
         error('No valid pyramidal width found.');
-    else
-        fprintf('Pyramidal width: %.4f\n', pyramidalWidth);
     end
 end

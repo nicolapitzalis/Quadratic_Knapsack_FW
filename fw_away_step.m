@@ -46,12 +46,19 @@ function [val, varargout] =  fw_away_step(P, varargin)
    else
       verbose = true;
    end
+
+   if length(varargin) > 3
+      is_theo_bound = varargin{4};
+  else
+      is_theo_bound = false;
+  end
    % ------------------
 
 
    % ----- Initialization -----
    time_start = tic;
    log_gap = zeros(MaxIter + 1, 1);
+   log_bound = zeros(MaxIter + 1, 1);
 
    x0 = LP(P, zeros(n, 1));
    x = x0;  % Initial solution
@@ -77,6 +84,16 @@ function [val, varargout] =  fw_away_step(P, varargin)
    i = 1;
    % --------------------------
 
+   if is_theo_bound
+      [~, golden_val, ~, ~] = quadprog(P.Q, P.q, [], [], [], [], P.l, P.u);
+      mu = min(eig(P.Q));
+      L = max(eig(P.Q));
+      delta = computePyramidalWidth(P.a, P.b, P.l, P.u, 1000);
+      D = solve_diameter_polytope(P);
+      rho = (mu / 4*L) * (delta / D)^2;
+   else
+      theoretical_bound = NaN;
+   end
 
    % ----- Main loop -----
    while true
@@ -108,9 +125,24 @@ function [val, varargout] =  fw_away_step(P, varargin)
       [bestlb, gap] = get_gap(val, g, s, x, bestlb);
       log_gap(i) = gap;
 
+      if is_theo_bound && i > 1
+         h = (1-rho) * h;
+      elseif is_theo_bound && i == 1
+          h = abs(val - golden_val);
+      end
+      if is_theo_bound
+          if (L*(D^2))/2 < h
+            theoretical_bound = h + L*(D^2)/2;
+         else
+            theoretical_bound = D * sqrt(2 * L * h);
+          end      
+      end
+      log_bound(i) = theoretical_bound;
+
+
       % Print iteration log
       if verbose
-         fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\n', i, val, bestlb, gap);
+         fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\n', i, val, bestlb, gap, theoretical_bound);
       end
 
       % Check stopping criteria
@@ -202,7 +234,7 @@ function [val, varargout] =  fw_away_step(P, varargin)
    
    fprintf('stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n', i, status, val, gap);
 
-   log = struct('gaps', log_gap, 'iteration', i, 'time', time_elapsed);
+   log = struct('gaps', log_gap, 'bounds', log_bound, 'iteration' , i, 'time', time_elapsed);
 
    if nargout > 1
       varargout{1} = x;

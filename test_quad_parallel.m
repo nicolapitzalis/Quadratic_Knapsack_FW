@@ -1,4 +1,4 @@
-function test_quad_parallel(alg, epsilon, max_iter, n, actv, density, rc, trials, path)
+function test_quad_parallel(alg, epsilon, max_iter, n, actv, density, rc, trials, plot_bounds, path)
 
     % profile on
     if isempty(gcp('nocreate'))
@@ -6,6 +6,7 @@ function test_quad_parallel(alg, epsilon, max_iter, n, actv, density, rc, trials
     end
 
     logs_gaps = zeros(max_iter+1, trials);
+    logs_bounds = zeros(max_iter+1, trials);
     times = zeros(1, trials);
     iterations = zeros(1, trials);
     differing_solutions = zeros(1, trials);
@@ -33,7 +34,7 @@ function test_quad_parallel(alg, epsilon, max_iter, n, actv, density, rc, trials
         if strcmp(alg, 'fw_og')
             [val, ~, ~, log] = fw_og(P, epsilon, max_iter, false);
         elseif strcmp(alg, 'fw_away_step')
-            [val, ~, ~, log] = fw_away_step(P, epsilon, max_iter, false);
+            [val, ~, ~, log] = fw_away_step(P, epsilon, max_iter, false, plot_bounds);
         elseif strcmp(alg, 'fw_pairwise')
             [val, ~, ~, log] = fw_pairwise(P, epsilon, max_iter, false);
         end
@@ -41,6 +42,7 @@ function test_quad_parallel(alg, epsilon, max_iter, n, actv, density, rc, trials
         % replace negative values with 0
         log.gaps(log.gaps < 0.0) = 0;
         logs_gaps(:, i) = log.gaps;
+        logs_bounds(:, i) = log.bounds;
         times(i) = log.time;
         iterations(i) = log.iteration;
 
@@ -60,6 +62,7 @@ function test_quad_parallel(alg, epsilon, max_iter, n, actv, density, rc, trials
     geo_mean_gaps = geomean(logs_gaps, 2);
     mean_times = mean(times);
     mean_iterations = mean(iterations);
+    geo_mean_bounds = geomean(logs_bounds, 2);
 
     disp('Mean times:');
     disp(mean_times);
@@ -77,10 +80,19 @@ function test_quad_parallel(alg, epsilon, max_iter, n, actv, density, rc, trials
     end
     % Plot the single trial log gap 
     fig = figure('Visible', 'off');
-    semilogy(1:length(logs_gaps), logs_gaps, '--', 'LineWidth', 1, 'Color', [0 0 0 0.2]);
-    hold on;
-    semilogy(1:length(geo_mean_gaps), geo_mean_gaps, '-', 'LineWidth', 3, 'Color', 'blue');
-    hold off;
+    disp(geo_mean_bounds);
+    if plot_bounds
+        semilogy(1:length(geo_mean_gaps), geo_mean_gaps, '-', 'LineWidth', 3, 'Color', 'blue', 'DisplayName', 'Mean Dual Gap');
+        hold on;
+        semilogy(1:length(geo_mean_bounds), geo_mean_bounds, '--', 'LineWidth', 3, 'Color', 'blue', 'DisplayName', 'Mean Upper Bound');
+        hold off;
+    else
+        semilogy(1:length(logs_gaps), logs_gaps, '--', 'LineWidth', 1, 'Color', [0 0 0 0.2]);
+        hold on;
+        semilogy(1:length(geo_mean_gaps), geo_mean_gaps, '-', 'LineWidth', 3, 'Color', 'blue');
+        hold off;
+    end
+    
     % Save plot
     xlabel('Iterations'); 
     ylabel('Gap');

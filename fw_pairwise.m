@@ -31,12 +31,12 @@ function [val, varargout] =  fw_pairwise(P, varargin)
     end
  
     if length(varargin) > 1
-       MaxIter = round( varargin{2} );
-       if ~ isscalar(MaxIter)
-          error('MaxIter is not an integer scalar');
+       max_iter = round( varargin{2} );
+       if ~ isscalar(max_iter)
+          error('max_iter is not an integer scalar');
        end
     else
-       MaxIter = 1000;
+       max_iter = 1000;
     end
  
     if length(varargin) > 2
@@ -47,12 +47,19 @@ function [val, varargout] =  fw_pairwise(P, varargin)
     else
        verbose = false;
     end
+
+    if length(varargin) > 3
+      bound_flag = varargin{4};
+    else
+      bound_flag = false;
+    end
     % ------------------
  
  
     % ----- Initialization -----
     time_start = tic;
-    log_gap = zeros(MaxIter + 1, 1);
+   log_gap = zeros(max_iter + 1, 1);
+   log_bound = zeros(max_iter + 1, 1);
  
     x0 = LP(P, zeros(n, 1));
     x = x0;  % Initial solution
@@ -69,7 +76,18 @@ function [val, varargout] =  fw_pairwise(P, varargin)
     S_keys{1} = key_x0;         % Store the key
     S = x0;                     % Initialize active set S with x0
     beta = 1;                   % Initialize beta with coefficient of x0
- 
+    
+    theoretical_bound = NaN;
+   if bound_flag
+      % Compute the theoretical bound
+      [~, golden_val, ~, ~] = quadprog(P.Q, P.q, [], [], [], [], P.l, P.u);
+      mu = min(eig(P.Q));
+      L = max(eig(P.Q));
+      delta = compute_pyramidal_width(P.a, P.b, P.l, P.u, 1000);
+      D = compute_diameter_polytope(P);
+      rho = (mu / 4*L) * (delta / D)^2; % Compute rho
+   end
+
     fprintf('Frank-Wolfe method\n');
     if verbose
        fprintf('iter\tf(x)\t\tlb\t\tgap\n\n');
@@ -100,18 +118,34 @@ function [val, varargout] =  fw_pairwise(P, varargin)
        % Compute the gap
        [bestlb, gap] = get_gap(val, g, s, x, bestlb);
        log_gap(i) = gap;
+
+       % Compute the theoretical bound
+      if bound_flag 
+         if i > 1
+            h = (1-rho) * h;
+         else 
+            h = abs(val - golden_val);
+         end
+      
+         if (L*(D^2))/2 < h
+            theoretical_bound = h + L*(D^2)/2;
+         else
+            theoretical_bound = D * sqrt(2 * L * h);
+         end      
+      end
+      log_bound(i) = theoretical_bound;
  
-       % Print iteration log
-       if verbose
-          fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\n', i, val, bestlb, gap);
-       end
+      % Print iteration log
+      if verbose
+         fprintf('%4d\t%1.8e\t%1.8e\t%1.4e\t%1.4e\n', i, val, bestlb, gap, theoretical_bound);
+      end
  
        % Check stopping criteria
        if gap <= eps
           status = 'optimal';
           break;
        end
-       if i > MaxIter
+       if i > max_iter
           status = 'stopped';
           break;
        end
@@ -120,7 +154,6 @@ function [val, varargout] =  fw_pairwise(P, varargin)
        step_size = line_search(P, d, g, step_size_max);
        x = x + step_size * d;
        
- 
        % Convert the new vector s to a key
        key_s = mat2str(s', 16);  % Convert the vector to a string with high precision
  
@@ -169,7 +202,7 @@ function [val, varargout] =  fw_pairwise(P, varargin)
     
     fprintf('stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n' , i, status, val, gap);
  
-    log = struct('gaps', log_gap, 'iteration', i, 'time', time_elapsed);
+    log = struct('gaps', log_gap, 'bounds', log_bound, 'iteration', i, 'time', time_elapsed);
  
     if nargout > 1
        varargout{1} = x;

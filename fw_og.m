@@ -30,12 +30,12 @@ function [val, varargout] =  fw_og(P, varargin)
    end
 
    if length(varargin) > 1
-      MaxIter = round( varargin{2} );
-      if ~ isscalar(MaxIter)
-         error('MaxIter is not an integer scalar');
+      max_iter = round( varargin{2} );
+      if ~ isscalar(max_iter)
+         error('max_iter is not an integer scalar');
       end
    else
-      MaxIter = 1000;
+      max_iter = 1000;
    end
 
    if length(varargin) > 2
@@ -48,20 +48,27 @@ function [val, varargout] =  fw_og(P, varargin)
    end
    
    if length(varargin) > 3
-       is_theo_bound = varargin{4};
+       bound_flag = varargin{4};
    else
-       is_theo_bound = false;
+       bound_flag = false;
    end
    % ------------------
 
    % ----- Initialization -----
    time_start = tic;
-   log_gap = zeros(MaxIter + 1, 1);
+   log_gap = zeros(max_iter + 1, 1);
+   log_bound = zeros(max_iter + 1, 1);
 
    x0 = LP(P, zeros(n, 1));
    x = x0;  % start from the middle of the box
 
    bestlb = - inf;  % best lower bound so far (= none, really)
+
+   theoretical_bound = NaN;
+   if bound_flag
+      curvature = curvature_function(P);
+      gamma = 27/8;
+   end
 
    fprintf( 'Frank-Wolfe method\n');
    if verbose
@@ -70,11 +77,7 @@ function [val, varargout] =  fw_og(P, varargin)
 
    i = 1;
    % --------------------------
-
-   if is_theo_bound
-       curvature = curvature_function(P);
-       gamma = 27/8;
-   end
+   
 
    % ----- Main loop -----
    while true
@@ -93,11 +96,10 @@ function [val, varargout] =  fw_og(P, varargin)
       [bestlb, gap] = get_gap(val, g, y, x, bestlb);
       log_gap(i) = gap;
       
-      if is_theo_bound
+      if bound_flag
         theoretical_bound = (2 * gamma * curvature)/(i+2);
-      else
-        theoretical_bound = NaN;
       end
+      log_bound(i) = theoretical_bound;
 
       % Print iteration log
       if verbose
@@ -109,7 +111,7 @@ function [val, varargout] =  fw_og(P, varargin)
          status = 'optimal';
          break;
       end
-      if i > MaxIter
+      if i > max_iter
          status = 'stopped';
          break;
       end
@@ -128,7 +130,7 @@ function [val, varargout] =  fw_og(P, varargin)
    
    fprintf('stop: %d iter, status = %s, fbest = %1.8e, gap = %1.4e\n', i, status, val, gap);
 
-   log = struct('gaps', log_gap, 'iteration', i, 'time', time_elapsed);
+   log = struct('gaps', log_gap, 'bounds', log_bound, 'iteration', i, 'time', time_elapsed);
 
    if nargout > 1
       varargout{1} = x;

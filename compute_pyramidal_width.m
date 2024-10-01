@@ -1,4 +1,4 @@
-function pyramidalWidth = computePyramidalWidth(a, b, l, u, num_samples)
+function pyramidalWidth = compute_pyramidal_width(a, b, l, u, num_samples)
     % INPUTS:
     % A, b: Linear inequality constraints (A * x <= b)
     % l, u: Box constraints (l <= x <= u)

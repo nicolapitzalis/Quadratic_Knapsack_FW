@@ -1,9 +1,4 @@
 function is_feasible = check_feasibility(x, l, u, a, b)
-    % x: the point to check
-    % l: the lower bounds vector
-    % u: the upper bounds vector
-    % a: the coefficients vector for the inequality constraint
-    % b: the scalar bound for the inequality constraint a'x >= b
 
     % Check box constraints: l <= x <= u
     box_constraints_satisfied = all(x >= l) && all(x <= u);

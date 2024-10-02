@@ -1,4 +1,5 @@
 function x_bar = LP(BCQP, c)
+    
     n = length(BCQP.a);
     x_bar = zeros(n, 1);
 

@@ -1,12 +1,4 @@
 function pyramidalWidth = compute_pyramidal_width(a, b, l, u, num_samples)
-    % INPUTS:
-    % A, b: Linear inequality constraints (A * x <= b)
-    % l, u: Box constraints (l <= x <= u)
-    % a: Coefficients of the linear inequality (a'x >= b)
-    % num_samples: Number of random directions to sample
-    %
-    % OUTPUT:
-    % pyramidalWidth: The computed pyramidal width
 
     n = length(l);  % Dimension of the problem
     pyramidalWidth = Inf;  % Initialize to a large number

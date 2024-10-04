@@ -1,5 +1,55 @@
 function test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, bound_flag, path)
 
+    % The test_quad function runs multiple trials to test different variants of the Frank-Wolfe algorithm on 
+    % instances of the convex quadratic knapsack problem. It collects performance metrics such as dual gaps, 
+    % computational times, and iterations, comparing the results with the `quadprog` solver in MATLAB. 
+    % The function supports parallel execution to speed up trials and logs results, plots, and information 
+    % about the experiment to files.
+    %
+    % Syntax:
+    % test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, bound_flag, path)
+    %
+    % Inputs:
+    % - alg: (string) The optimization algorithm to test, one of: 'fw_og', 'fw_away_step', 'fw_pairwise', or 'quadprog'.
+    % - epsilon: (float) The convergence tolerance for the Frank-Wolfe variants.
+    % - max_iter: (integer) Maximum number of iterations allowed for the algorithms.
+    % - n: (integer) Problem size.
+    % - actv: (float) Fraction of active constraints in the problem, specifying how many variables are initially out of bounds.
+    % - density: (float) Density of the quadratic matrix Q, determining the percentage of non-zero elements.
+    % - rc: (float) Reciprocal condition number of the matrix Q.
+    % - trials: (integer) Number of trials to run for statistical robustness.
+    % - bound_flag: (boolean) If true, plots the dual gap along with upper bounds during the experiment.
+    % - path: (string) Directory path where the results, plots, and logs will be saved.
+    %
+    % Outputs:
+    % This function does not return any output directly. Instead, it generates several output files:
+    % - A JSON file containing experiment information such as algorithm name, mean times, iterations, and dual gaps.
+    % - A plot visualizing the dual gaps (and upper bounds if specified) over the iterations for all trials.
+    % - A log showing the number of differing solutions between the tested algorithm and `quadprog`.
+    
+    % Example Usage:
+    % alg = 'fw_og';         
+    % epsilon = 1e-6;       
+    % max_iter = 1500;      
+    % n = 100;              
+    % actv = 0.5;            
+    % density = 0.2;         
+    % rc = 0.01;             
+    % trials = 10;           
+    % bound_flag = true;     
+    % path = 'results'; 
+    % test_quad(alg, epsilon, max_iter, n, actv, density, rc, trials, bound_flag, path);
+
+    % Notes:
+    % - The function leverages MATLAB’s parallel computing capabilities to speed up the trials.
+    % - The random seed for each trial is based on the trial number, ensuring reproducibility.
+    % - The use of quadpro` as a reference allows for validation of the accuracy of the tested algorithms.
+    %
+    % See Also:
+    % - gen_problem: Generates instances of the convex quadratic knapsack problem.
+    % - fw_og, fw_away_step, fw_pairwise: Frank-Wolfe algorithm variants for solving quadratic programming problems.
+    % - quadprog: MATLAB's built-in solver for quadratic programming problems.
+    
     % profile on
     if isempty(gcp('nocreate'))
         parpool;  % Start the parallel pool if it's not already started

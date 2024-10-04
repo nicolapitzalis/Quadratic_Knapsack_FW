@@ -1,4 +1,54 @@
 function [val, varargout] =  fw_pairwise(P, varargin)
+   
+   % The fw_pairwise function implements the Pairwise Frank-Wolfe (FW) algorithm for solving a convex quadratic 
+   % programming problem in the form: 
+   % min_x  x'Qx + q'x
+   % subject to:
+   % l <= x <= u   and   a'x >= b
+   % The Pairwise variant of the Frank-Wolfe algorithm updates the solution by moving between two active 
+   % points—one moving toward the Frank-Wolfe direction and the other moving away from a point already in 
+   % the active set. This allows faster convergence by combining the benefits of both Frank-Wolfe and Away-step updates.
+
+   % Syntax:
+   % [val, x, status, log] = fw_og(P, epsilon, max_iter, verbose, bound_flag)
+
+   % Inputs:
+   % - P: (struct) A structure representing the problem instance with the following fields:
+   %   - Q: (matrix) The quadratic matrix Q (should be symmetric and positive semi-definite).
+   %   - q: (vector) The linear term in the objective function.
+   %   - l: (vector) Lower bounds for the variables.
+   %   - u: (vector) Upper bounds for the variables.
+   % - epsilon: (float, optional) Stopping criterion for the duality gap. If the duality gap is smaller than epsilon, the algorithm terminates. Default is 1 x 10^{-6}.
+   % - max_iter: (integer, optional) Maximum number of iterations allowed. Default is 1000.
+   % - verbose: (boolean, optional) Whether to display detailed information during each iteration. Default is `true`.
+   % - bound_flag: (boolean, optional) If `true`, the function computes theoretical bounds for the algorithm’s convergence. Default is `false`.
+
+   % Outputs:
+   % - val: (float) The objective function value at the final solution.
+   % - x: (vector, optional) The solution vector at the final iteration.
+   % - status: (string, optional) The termination status of the algorithm. It can be either `'optimal'` if the solution meets the stopping criterion, or `'stopped'` if the maximum number of iterations is reached.
+   % - log: (struct, optional) A structure containing logs of the optimization process with the following fields:
+   %   - gaps: (vector) The dual gap at each iteration.
+   %   - bounds: (vector) The computed theoretical bounds (if `bound_flag` is `true`).
+   %   - iteration: (integer) The number of iterations performed.
+   %   - time: (float) Time taken to complete the optimization process.
+   %
+   % Example Usage:
+   % P.Q = sprandsym(10, 0.3);  
+   % P.q = rand(10, 1);        
+   % P.l = zeros(10, 1);       
+   % P.u = ones(10, 1);   
+   % [val, x, status, log] = fw_og(P, 1e-6, 500, true, true);
+   %
+   % Notes:
+   % - The function uses LP to solve linear subproblems, which minimizes a linear function over the feasible region 
+   % defined by the contraints.
+   % - The duality gap provides a measure of how close the current solution is to optimality.
+   % - If bound_flag is set, theoretical convergence bounds are computed at each iteration based on the curvature of the problem.
+
+   % See Also:
+   % - `LP`: Solves the linear subproblem within the Frank-Wolfe method.
+   % - `line_search`: Determines the optimal step size for updating the solution.
 
     profile on
     % ----- Inputs -----

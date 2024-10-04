@@ -1,5 +1,45 @@
 function run_experiments()
-   
+
+    % The run_experiments function performs a series of experiments to evaluate the performance of 
+    % different variants of the Frank-Wolfe algorithm (fw_og, fw_away_step, and fw_pairwise) on convex 
+    % quadratic programming problems. The experiments are conducted under various conditions by varying problem size, 
+    % constraint activity, matrix density, and condition number, and results are saved in the specified directories. 
+    % The function also generates comparison plots of the results.
+    %
+    % Syntax:
+    % run_experiments()
+    %
+    % Inputs:
+    % - None. All parameters are predefined within the function.
+
+    % Description:
+    % The function systematically varies parameters such as problem size (`n`), constraint activity (`actv`), 
+    % matrix density (`density`), and condition number (`rc`) to benchmark and compare the performance of 
+    % different Frank-Wolfe algorithm variants. For each configuration, multiple trials are run, and the 
+    % results are saved for later analysis.
+
+    % Outputs:
+    % The function does not return any output directly. Instead, it generates several output files:
+    % - JSON logs for each experiment, detailing performance metrics such as dual gaps, computation times, and iteration counts.
+    % - PNG plots comparing the performance of the different algorithms under each set of experimental conditions.
+    % - Results are saved in directories under `results/` based on the parameter configurations.
+    %
+    % Example Usage:
+    % run_experiments();
+    %
+    % Notes:
+    % - The function utilizes the test_quad subroutine to run the actual optimization experiments and plot_comparison 
+    % to visualize the results.
+    % - Different parameter sets allow the user to test the algorithms across a wide range of problem characteristics, 
+    % including very sparse and large-scale problems.
+    % - The final set of "winner" experiments is configured to thoroughly test the algorithms with fine precision and 
+    % extensive iterations.
+    %
+    % See Also:
+    % - test_quad: Function used to test each Frank-Wolfe variant.
+    % - plot_comparison: Generates comparison plots based on experiment results.
+
+
     base_n = 100; 
     base_actv = 0.7;
     base_density = 0.9;

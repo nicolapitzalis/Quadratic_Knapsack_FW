@@ -1,5 +1,24 @@
 function plot_comparison(experiment_path)
 
+    % The `plot_comparison` function reads and compares the results of three Frank-Wolfe algorithm variants (fw_og, fw_away_step, fw_pairwise)
+    % by plotting their geometric mean gaps across iterations. This function is useful for visualizing the performance differences between
+    % the algorithms based on logs stored in the experiment_path.
+    %
+    % Syntax:
+    % plot_comparison(experiment_path)
+    %
+    % Inputs:
+    % - experiment_path: (string) The directory path containing the logs of the Frank-Wolfe algorithm variants. The logs must be stored in 
+    %   JSON format within subdirectories of the `experiment_path`.
+    %
+    % Outputs:
+    % - This function does not return any values, but it saves a comparison plot (PNG) of the geometric mean gaps for the three algorithms
+    %   in the `experiment_path`.
+    %
+    % Example Usage:
+    % experiment_path = 'results/convergence';
+    % plot_comparison(experiment_path);
+
     files = dir(experiment_path);
     
     % Loop through each file in the folder
